@@ -1,21 +1,18 @@
-// src/components/Dashboard.js
-import React from 'react';
+// Dashboard.js — Overview stats cards
 
 const OverviewCards = ({ subjects, tasks, exams }) => {
-  const totalSubjects = subjects.length;
-  const tasksDue      = tasks.filter(t => !t.done).length;
-  const overdueCount  = tasks.filter(t => !t.done && t.priority === 'HIGH').length;
-  const examCount     = exams.length;
-
-  const nextExamDays = exams.length > 0
-    ? Math.min(
-        ...exams
-          .map(e => Math.ceil((new Date(e.date) - new Date()) / (1000 * 60 * 60 * 24)))
-          .filter(d => d >= 0)
-      )
+  // Compute stats
+  const totalSubjects  = subjects.length;
+  const tasksDue       = tasks.filter(t => !t.done).length;
+  const overdueCount   = tasks.filter(t => !t.done && t.priority === 'HIGH').length;
+  const examCount      = exams.length;
+  const nextExamDays   = exams.length > 0
+    ? Math.min(...exams.map(e => {
+        const diff = new Date(e.date) - new Date();
+        return Math.ceil(diff / (1000*60*60*24));
+      }).filter(d => d >= 0))
     : null;
-
-  const completedPct = tasks.length > 0
+  const completedPct   = tasks.length > 0
     ? Math.round((tasks.filter(t => t.done).length / tasks.length) * 100)
     : 0;
 
@@ -58,5 +55,3 @@ const OverviewCards = ({ subjects, tasks, exams }) => {
     </div>
   );
 };
-
-export default OverviewCards;

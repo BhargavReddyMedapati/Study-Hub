@@ -1,57 +1,63 @@
-// src/App.js
-import React, { useState, useEffect } from 'react';
-import './App.css';
+// App.js — Root component
+// Manages global state + localStorage persistence
 
-// Components
-import Sidebar      from './components/Sidebar';
-import Header       from './components/Header';
-import OverviewCards from './components/Dashboard';
-import { PinnedSubjects, SubjectsGrid } from './components/Subjects';
-import TasksPanel   from './components/Tasks';
-import ExamsPanel   from './components/Exams';
-import PlannerSection from './components/Planner';
-import {
-  AddSubjectModal,
-  AddTaskModal,
-  AddExamModal,
-  AddPlannerTaskModal,
-} from './components/Modals';
+const { useState, useEffect, useCallback } = React;
 
-/* ── Seed data ── */
-const TODAY = new Date();
+/* ── Default Seed Data ── */
+const DEFAULT_SUBJECTS = [
+  {
+    id: 1, name: 'Data Structures', code: 'CS201',
+    description: 'Arrays, linked lists, trees, graphs, and algorithm complexity analysis.',
+    icon: '💡', color: '#4f8eff', pinned: true, notes: 5, tasks: 3, progress: 72,
+  },
+  {
+    id: 2, name: 'Operating Systems', code: 'CS301',
+    description: 'Process scheduling, memory management, file systems, and concurrency.',
+    icon: '⚙️', color: '#9b6fff', pinned: true, notes: 8, tasks: 2, progress: 45,
+  },
+  {
+    id: 3, name: 'Linear Algebra', code: 'MA201',
+    description: 'Matrices, vector spaces, eigenvalues, linear transformations and applications.',
+    icon: '📐', color: '#2ddbb4', pinned: true, notes: 6, tasks: 5, progress: 60,
+  },
+  {
+    id: 4, name: 'Computer Networks', code: 'CS401',
+    description: 'TCP/IP stack, routing protocols, network security and distributed systems.',
+    icon: '🌐', color: '#f5a623', pinned: false, notes: 4, tasks: 2, progress: 30,
+  },
+  {
+    id: 5, name: 'Machine Learning', code: 'CS501',
+    description: 'Supervised, unsupervised learning, neural networks and model evaluation.',
+    icon: '🧠', color: '#ff5f7e', pinned: false, notes: 3, tasks: 6, progress: 20,
+  },
+];
+
+const today = new Date();
 const fmtDate = (offsetDays) => {
-  const d = new Date(TODAY);
+  const d = new Date(today);
   d.setDate(d.getDate() + offsetDays);
   return d.toISOString().split('T')[0];
 };
 
-const DEFAULT_SUBJECTS = [
-  { id: 1, name: 'Data Structures',   code: 'CS201', description: 'Arrays, linked lists, trees, graphs, and algorithm complexity analysis.', icon: '💡', color: '#4f8eff', pinned: true,  notes: 5, tasks: 3, progress: 72 },
-  { id: 2, name: 'Operating Systems', code: 'CS301', description: 'Process scheduling, memory management, file systems, and concurrency.',    icon: '⚙️', color: '#9b6fff', pinned: true,  notes: 8, tasks: 2, progress: 45 },
-  { id: 3, name: 'Linear Algebra',    code: 'MA201', description: 'Matrices, vector spaces, eigenvalues, linear transformations.',            icon: '📐', color: '#2ddbb4', pinned: true,  notes: 6, tasks: 5, progress: 60 },
-  { id: 4, name: 'Computer Networks', code: 'CS401', description: 'TCP/IP stack, routing protocols, network security and distributed systems.',icon: '🌐', color: '#f5a623', pinned: false, notes: 4, tasks: 2, progress: 30 },
-  { id: 5, name: 'Machine Learning',  code: 'CS501', description: 'Supervised, unsupervised learning, neural networks and model evaluation.', icon: '🧠', color: '#ff5f7e', pinned: false, notes: 3, tasks: 6, progress: 20 },
-];
-
 const DEFAULT_TASKS = [
-  { id: 101, name: 'Read Ch.4 — Graphs',            subject: 'CS201', priority: 'HIGH', time: '',      done: true  },
-  { id: 102, name: 'Submit OS Assignment #3',        subject: 'CS301', priority: 'HIGH', time: '23:59', done: false },
-  { id: 103, name: 'Practice eigenvalue problems',   subject: 'MA201', priority: 'MED',  time: '',      done: false },
-  { id: 104, name: 'Review TCP/IP lecture slides',   subject: 'CS401', priority: 'LOW',  time: '',      done: false },
+  { id: 101, name: 'Read Ch.4 — Graphs', subject: 'CS201', priority: 'HIGH', time: '', done: true },
+  { id: 102, name: 'Submit OS Assignment #3', subject: 'CS301', priority: 'HIGH', time: '23:59', done: false },
+  { id: 103, name: 'Practice eigenvalue problems', subject: 'MA201', priority: 'MED', time: '', done: false },
+  { id: 104, name: 'Review TCP/IP lecture slides', subject: 'CS401', priority: 'LOW', time: '', done: false },
 ];
 
 const DEFAULT_EXAMS = [
-  { id: 201, subject: 'Data Structures — Mid 2', code: 'CS201', date: fmtDate(5),  time: '10:00', location: 'Hall A'  },
-  { id: 202, subject: 'Linear Algebra Final',    code: 'MA201', date: fmtDate(12), time: '14:00', location: 'Hall C'  },
-  { id: 203, subject: 'Operating Systems Final', code: 'CS301', date: fmtDate(26), time: '09:00', location: 'Online'  },
+  { id: 201, subject: 'Data Structures — Mid 2', code: 'CS201', date: fmtDate(5),  time: '10:00', location: 'Hall A' },
+  { id: 202, subject: 'Linear Algebra Final',    code: 'MA201', date: fmtDate(12), time: '14:00', location: 'Hall C' },
+  { id: 203, subject: 'Operating Systems Final', code: 'CS301', date: fmtDate(26), time: '09:00', location: 'Online' },
 ];
 
 const DEFAULT_PLANNER = [
-  { id: 301, name: 'OS Assignment #3 — Final Review',        subject: 'CS301', priority: 'HIGH', time: '09:00', duration: '90', date: fmtDate(0), done: false },
-  { id: 302, name: 'Graph traversal practice problems',       subject: 'CS201', priority: 'MED',  time: '11:30', duration: '60', date: fmtDate(0), done: false },
-  { id: 303, name: 'Eigenvalues & eigenvectors worksheet',    subject: 'MA201', priority: 'LOW',  time: '14:00', duration: '45', date: fmtDate(0), done: false },
-  { id: 304, name: 'Study TCP/IP protocol stack',             subject: 'CS401', priority: 'MED',  time: '10:00', duration: '60', date: fmtDate(1), done: false },
-  { id: 305, name: 'ML model evaluation techniques',          subject: 'CS501', priority: 'LOW',  time: '15:00', duration: '45', date: fmtDate(2), done: false },
+  { id: 301, name: 'OS Assignment #3 — Final Review', subject: 'CS301', priority: 'HIGH', time: '09:00', duration: '90', date: fmtDate(0), done: false },
+  { id: 302, name: 'Graph traversal practice problems', subject: 'CS201', priority: 'MED', time: '11:30', duration: '60', date: fmtDate(0), done: false },
+  { id: 303, name: 'Eigenvalues & eigenvectors worksheet', subject: 'MA201', priority: 'LOW', time: '14:00', duration: '45', date: fmtDate(0), done: false },
+  { id: 304, name: 'Study TCP/IP protocol stack', subject: 'CS401', priority: 'MED', time: '10:00', duration: '60', date: fmtDate(1), done: false },
+  { id: 305, name: 'ML model evaluation techniques', subject: 'CS501', priority: 'LOW', time: '15:00', duration: '45', date: fmtDate(2), done: false },
 ];
 
 /* ── localStorage helpers ── */
@@ -66,14 +72,6 @@ const save = (key, value) => {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
 };
 
-/* ── Default profile ── */
-const DEFAULT_PROFILE = {
-  name: 'Alex Chen',
-  semester: 'Semester 6',
-  institution: '',
-  avatarColor: 'blue',
-};
-
 /* ── Toast ── */
 const Toast = ({ msg }) => (
   <div className="toast">
@@ -82,37 +80,31 @@ const Toast = ({ msg }) => (
   </div>
 );
 
-/* ── App ── */
-function App() {
-  const [activePage,    setActivePage]    = useState('dashboard');
-  const [searchQuery,   setSearchQuery]   = useState('');
-  const [subjects,      setSubjects]      = useState(() => load('sh_subjects',  DEFAULT_SUBJECTS));
-  const [tasks,         setTasks]         = useState(() => load('sh_tasks',     DEFAULT_TASKS));
-  const [exams,         setExams]         = useState(() => load('sh_exams',     DEFAULT_EXAMS));
-  const [plannerTasks,  setPlannerTasks]  = useState(() => load('sh_planner',   DEFAULT_PLANNER));
-  const [modal,         setModal]         = useState(null);   // 'subject'|'task'|'exam'|'planner'
-  const [plannerDate,   setPlannerDate]   = useState(null);
-  const [toast,         setToast]         = useState(null);
-  const [profile,       setProfile]       = useState(() => load('sh_profile', DEFAULT_PROFILE));
+/* ── Main App ── */
+const App = () => {
+  const [activePage,   setActivePage]   = useState('dashboard');
+  const [searchQuery,  setSearchQuery]  = useState('');
+  const [subjects,     setSubjects]     = useState(() => load('sh_subjects',     DEFAULT_SUBJECTS));
+  const [tasks,        setTasks]        = useState(() => load('sh_tasks',        DEFAULT_TASKS));
+  const [exams,        setExams]        = useState(() => load('sh_exams',        DEFAULT_EXAMS));
+  const [plannerTasks, setPlannerTasks] = useState(() => load('sh_planner',      DEFAULT_PLANNER));
 
-  // Persist to localStorage whenever data changes
-  useEffect(() => save('sh_subjects',  subjects),     [subjects]);
-  useEffect(() => save('sh_tasks',     tasks),        [tasks]);
-  useEffect(() => save('sh_exams',     exams),        [exams]);
-  useEffect(() => save('sh_planner',   plannerTasks), [plannerTasks]);
-  useEffect(() => save('sh_profile',  profile),      [profile]);
+  const [modal,        setModal]        = useState(null); // 'subject'|'task'|'exam'|'planner'
+  const [plannerDate,  setPlannerDate]  = useState(null);
+  const [toast,        setToast]        = useState(null);
+
+  // Persist on change
+  useEffect(() => save('sh_subjects',     subjects),     [subjects]);
+  useEffect(() => save('sh_tasks',        tasks),        [tasks]);
+  useEffect(() => save('sh_exams',        exams),        [exams]);
+  useEffect(() => save('sh_planner',      plannerTasks), [plannerTasks]);
 
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
   };
 
-  /* ── Actions ── */
-  const saveProfile = (p) => {
-    setProfile(p);
-    showToast('Profile updated!');
-  };
-
+  /* Actions */
   const addSubject = (s) => {
     setSubjects(prev => [...prev, s]);
     showToast(`"${s.name}" added!`);
@@ -131,16 +123,6 @@ function App() {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
   };
 
-  const deleteSubject = (id) => {
-    setSubjects(prev => prev.filter(s => s.id !== id));
-    showToast('Subject removed.');
-  };
-
-  const deleteTask = (id) => {
-    setTasks(prev => prev.filter(t => t.id !== id));
-    showToast('Task deleted.');
-  };
-
   const addExam = (e) => {
     setExams(prev => [...prev, e]);
     showToast('Exam scheduled!');
@@ -156,7 +138,7 @@ function App() {
     setModal('planner');
   };
 
-  /* ── Page content ── */
+  /* Page Rendering */
   const renderPage = () => {
     const isDashboard = activePage === 'dashboard';
     const isSubjects  = activePage === 'subjects';
@@ -165,75 +147,62 @@ function App() {
 
     return (
       <div className="page-content">
-
-        {/* ── DASHBOARD ── */}
-        {isDashboard && (
+        {/* Dashboard = overview + pinned + subjects + tasks + exams + planner */}
+        {(isDashboard) && (
           <>
             <OverviewCards subjects={subjects} tasks={tasks} exams={exams} />
-            <PinnedSubjects subjects={subjects} onAdd={() => setModal('subject')} onTogglePin={togglePin} onDelete={deleteSubject} />
+            <PinnedSubjects subjects={subjects} onAdd={() => setModal('subject')} />
             <SubjectsGrid
-              subjects={subjects}
-              onTogglePin={togglePin}
-              onAdd={() => setModal('subject')}
-              onDelete={deleteSubject}
-              searchQuery={searchQuery}
+              subjects={subjects} onTogglePin={togglePin}
+              onAdd={() => setModal('subject')} searchQuery={searchQuery}
             />
             <div className="bottom-grid">
-              <TasksPanel tasks={tasks} onToggle={toggleTask} onAdd={() => setModal('task')} onDelete={deleteTask} />
+              <TasksPanel tasks={tasks} onToggle={toggleTask} onAdd={() => setModal('task')} />
               <ExamsPanel exams={exams} onAdd={() => setModal('exam')} />
             </div>
             <PlannerSection plannerTasks={plannerTasks} onAddTask={openPlannerAdd} />
           </>
         )}
 
-        {/* ── SUBJECTS ── */}
         {isSubjects && (
           <>
-            <PinnedSubjects subjects={subjects} onAdd={() => setModal('subject')} onTogglePin={togglePin} onDelete={deleteSubject} />
+            <PinnedSubjects subjects={subjects} onAdd={() => setModal('subject')} />
             <SubjectsGrid
-              subjects={subjects}
-              onTogglePin={togglePin}
-              onAdd={() => setModal('subject')}
-              onDelete={deleteSubject}
-              searchQuery={searchQuery}
+              subjects={subjects} onTogglePin={togglePin}
+              onAdd={() => setModal('subject')} searchQuery={searchQuery}
             />
           </>
         )}
 
-        {/* ── TASKS ── */}
         {isTasks && (
           <div style={{ maxWidth: 600 }}>
-            <TasksPanel tasks={tasks} onToggle={toggleTask} onAdd={() => setModal('task')} onDelete={deleteTask} />
+            <TasksPanel tasks={tasks} onToggle={toggleTask} onAdd={() => setModal('task')} />
           </div>
         )}
 
-        {/* ── PLANNER ── */}
         {isPlanner && (
           <PlannerSection plannerTasks={plannerTasks} onAddTask={openPlannerAdd} />
         )}
-
       </div>
     );
   };
 
   return (
     <div className="app-layout">
-      {/* Left sidebar */}
+      {/* Sidebar */}
       <Sidebar activePage={activePage} setActivePage={setActivePage} />
 
-      {/* Main area */}
+      {/* Main */}
       <div className="main-content">
         <Header
           activePage={activePage}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          profile={profile}
-          onProfileSave={saveProfile}
         />
         {renderPage()}
       </div>
 
-      {/* ── Modals ── */}
+      {/* Modals */}
       {modal === 'subject' && (
         <AddSubjectModal onClose={() => setModal(null)} onAdd={addSubject} />
       )}
@@ -252,10 +221,12 @@ function App() {
         />
       )}
 
-      {/* ── Toast notification ── */}
+      {/* Toast */}
       {toast && <Toast msg={toast} />}
     </div>
   );
-}
+};
 
-export default App;
+// Mount React app
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);

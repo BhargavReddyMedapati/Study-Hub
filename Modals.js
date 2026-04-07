@@ -1,22 +1,27 @@
-// src/components/Modals.js
-import React, { useState } from 'react';
+// Modals.js — All modal dialog components
 
-/* ────────────────────────────────
-   Add Subject Modal
-──────────────────────────────── */
-export const AddSubjectModal = ({ onClose, onAdd }) => {
+const { useState } = React;
+
+/* ── Add Subject Modal ── */
+const AddSubjectModal = ({ onClose, onAdd }) => {
   const [form, setForm] = useState({
-    name: '', code: '', description: '', icon: '📖', color: '#4f8eff', progress: 0,
+    name: '', code: '', description: '', icon: '📖', color: '#4f8eff', progress: 0
   });
 
-  const colors = ['#4f8eff', '#9b6fff', '#2ddbb4', '#f5a623', '#ff5f7e', '#3ddc84', '#ff9f43'];
-  const icons  = ['📖', '💡', '⚙️', '📐', '🌐', '🧠', '📊', '🔬', '🎯', '⚡', '🔥', '💻'];
+  const colors = ['#4f8eff','#9b6fff','#2ddbb4','#f5a623','#ff5f7e','#3ddc84','#ff9f43'];
+  const icons  = ['📖','💡','⚙️','📐','🌐','🧠','📊','🔬','🎯','⚡','🔥','💻'];
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const handleSubmit = () => {
     if (!form.name.trim() || !form.code.trim()) return;
-    onAdd({ ...form, id: Date.now(), pinned: false, notes: 0, tasks: 0 });
+    onAdd({
+      ...form,
+      id: Date.now(),
+      pinned: false,
+      notes: 0,
+      tasks: 0,
+    });
     onClose();
   };
 
@@ -40,7 +45,7 @@ export const AddSubjectModal = ({ onClose, onAdd }) => {
 
         <div className="form-group">
           <label className="form-label">Description</label>
-          <textarea className="form-textarea" placeholder="Brief description..."
+          <textarea className="form-textarea" placeholder="Brief description of the subject..."
             value={form.description} onChange={e => set('description', e.target.value)} />
         </div>
 
@@ -48,7 +53,8 @@ export const AddSubjectModal = ({ onClose, onAdd }) => {
           <label className="form-label">Icon</label>
           <div className="color-options">
             {icons.map(icon => (
-              <button key={icon} onClick={() => set('icon', icon)}
+              <button key={icon}
+                onClick={() => set('icon', icon)}
                 style={{
                   background: form.icon === icon ? 'var(--bg-elevated)' : 'none',
                   border: `2px solid ${form.icon === icon ? 'var(--accent-blue)' : 'transparent'}`,
@@ -73,7 +79,7 @@ export const AddSubjectModal = ({ onClose, onAdd }) => {
           <label className="form-label">Progress ({form.progress}%)</label>
           <input type="range" min="0" max="100" value={form.progress}
             onChange={e => set('progress', parseInt(e.target.value))}
-            style={{ width: '100%', accentColor: 'var(--accent-blue)' }} />
+            style={{ width:'100%', accentColor: 'var(--accent-blue)' }} />
         </div>
 
         <div className="modal-actions">
@@ -85,12 +91,10 @@ export const AddSubjectModal = ({ onClose, onAdd }) => {
   );
 };
 
-/* ────────────────────────────────
-   Add Task Modal
-──────────────────────────────── */
-export const AddTaskModal = ({ onClose, onAdd, subjects }) => {
+/* ── Add Task Modal ── */
+const AddTaskModal = ({ onClose, onAdd, subjects }) => {
   const [form, setForm] = useState({
-    name: '', subject: subjects[0]?.code || '', priority: 'MED', time: '',
+    name: '', subject: subjects[0]?.code || '', priority: 'MED', time: ''
   });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -107,7 +111,7 @@ export const AddTaskModal = ({ onClose, onAdd, subjects }) => {
 
         <div className="form-group">
           <label className="form-label">Task Name</label>
-          <input className="form-input" placeholder="e.g. Read Chapter 4"
+          <input className="form-input" placeholder="e.g. Read Chapter 4 — Graphs"
             value={form.name} onChange={e => set('name', e.target.value)} />
         </div>
 
@@ -115,9 +119,7 @@ export const AddTaskModal = ({ onClose, onAdd, subjects }) => {
           <div className="form-group">
             <label className="form-label">Subject</label>
             <select className="form-select" value={form.subject} onChange={e => set('subject', e.target.value)}>
-              {subjects.map(s => (
-                <option key={s.id} value={s.code}>{s.code} — {s.name}</option>
-              ))}
+              {subjects.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
               <option value="General">General</option>
             </select>
           </div>
@@ -146,14 +148,12 @@ export const AddTaskModal = ({ onClose, onAdd, subjects }) => {
   );
 };
 
-/* ────────────────────────────────
-   Add Exam Modal
-──────────────────────────────── */
-export const AddExamModal = ({ onClose, onAdd, subjects }) => {
+/* ── Add Exam Modal ── */
+const AddExamModal = ({ onClose, onAdd, subjects }) => {
   const [form, setForm] = useState({
     subject: subjects[0]?.name || '',
     code:    subjects[0]?.code || '',
-    date: '', time: '', location: '',
+    date: '', time: '', location: ''
   });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -178,9 +178,7 @@ export const AddExamModal = ({ onClose, onAdd, subjects }) => {
           <div className="form-group">
             <label className="form-label">Subject</label>
             <select className="form-select" value={form.code} onChange={e => handleSubjectChange(e.target.value)}>
-              {subjects.map(s => (
-                <option key={s.id} value={s.code}>{s.code} — {s.name}</option>
-              ))}
+              {subjects.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
             </select>
           </div>
           <div className="form-group">
@@ -218,13 +216,11 @@ export const AddExamModal = ({ onClose, onAdd, subjects }) => {
   );
 };
 
-/* ────────────────────────────────
-   Add Planner Task Modal
-──────────────────────────────── */
-export const AddPlannerTaskModal = ({ onClose, onAdd, subjects, defaultDate }) => {
+/* ── Add Planner Task Modal ── */
+const AddPlannerTaskModal = ({ onClose, onAdd, subjects, defaultDate }) => {
   const [form, setForm] = useState({
     name: '', subject: subjects[0]?.code || '', priority: 'MED',
-    time: '', duration: '', date: defaultDate || '',
+    time: '', duration: '', date: defaultDate || ''
   });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -241,7 +237,7 @@ export const AddPlannerTaskModal = ({ onClose, onAdd, subjects, defaultDate }) =
 
         <div className="form-group">
           <label className="form-label">Task Name</label>
-          <input className="form-input" placeholder="e.g. OS Assignment Review"
+          <input className="form-input" placeholder="e.g. OS Assignment — Final Review"
             value={form.name} onChange={e => set('name', e.target.value)} />
         </div>
 
@@ -249,9 +245,7 @@ export const AddPlannerTaskModal = ({ onClose, onAdd, subjects, defaultDate }) =
           <div className="form-group">
             <label className="form-label">Subject</label>
             <select className="form-select" value={form.subject} onChange={e => set('subject', e.target.value)}>
-              {subjects.map(s => (
-                <option key={s.id} value={s.code}>{s.code}</option>
-              ))}
+              {subjects.map(s => <option key={s.id} value={s.code}>{s.code}</option>)}
               <option value="General">General</option>
             </select>
           </div>
